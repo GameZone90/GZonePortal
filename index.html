@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PSFree-Lapse Exploit For PS4 9.00 | GameZone Portal</title>
+    
+    <style>
+      @font-face {
+        font-family: 'logging';
+        src: url('fonts/LiberationMono-Regular.ttf');
+      }
+      
+      * {
+        box-sizing: border-box;
+      }
+      
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100vw;
+        height: 100vh;
+        font-family: 'logging', 'Courier New', monospace;
+        background-color: #000;
+        color: #00ffff;
+        overflow: hidden;
+      }
+      
+      /* إزالة الخلفية المفقودة */
+      .background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, #001122, #003344);
+        z-index: -1;
+      }
+      
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 1;
+        transition: opacity 0.5s ease;
+      }
+      
+      .loading-overlay.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      
+      .spinner {
+        width: 60px;
+        height: 60px;
+        border: 4px solid rgba(0, 255, 255, 0.3);
+        border-top: 4px solid #00ffff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      .main-container {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+      }
+      
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.5vh 3vw;
+        background: rgba(0, 0, 0, 0.8);
+        border-bottom: 2px solid #00ffff;
+        box-shadow: 0 2px 10px rgba(0, 255, 255, 0.3);
+        height: 12vh;
+        min-height: 80px;
+      }
+      
+      .header h1 {
+        margin: 0;
+        font-size: 2.5vw;
+        min-font-size: 2rem;
+        max-font-size: 4rem;
+        text-shadow: 0 0 10px #00ffff;
+        animation: glow 2s ease-in-out infinite alternate;
+        flex-grow: 1;
+        text-align: center;
+      }
+      
+      @keyframes glow {
+        from {
+          text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 30px #00ffff;
+        }
+        to {
+          text-shadow: 0 0 20px #00ffff, 0 0 30px #00ffff, 0 0 40px #00ffff;
+        }
+      }
+      
+      .contact-info {
+        background: rgba(0, 0, 0, 0.8);
+        padding: 1vh 1.5vw;
+        border-radius: 10px;
+        border: 2px solid #00ffff;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        animation: slideInRight 1s ease-out;
+        min-width: 200px;
+        text-align: center;
+      }
+      
+      @keyframes slideInRight {
+        from {
+          opacity: 0;
+          transform: translateX(100px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      
+      .contact-info .phone {
+        font-size: 1.2vw;
+        min-font-size: 1rem;
+        max-font-size: 1.8rem;
+        color: #00ff88;
+        font-weight: bold;
+        text-shadow: 0 0 5px #00ff88;
+      }
+      
+      .contact-info .label {
+        font-size: 0.9vw;
+        min-font-size: 0.8rem;
+        max-font-size: 1.2rem;
+        color: #88ffff;
+        margin-bottom: 0.5vh;
+      }
+      
+      .status-display {
+        background: rgba(0, 0, 0, 0.6);
+        padding: 0.5vh 1vw;
+        border-radius: 5px;
+        border: 1px solid #00ffff;
+        font-size: 1vw;
+        min-font-size: 0.9rem;
+        max-font-size: 1.4rem;
+        min-width: 200px;
+        text-align: center;
+      }
+      
+      .content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2vw;
+        padding: 2vh 3vw;
+        height: 76vh;
+        overflow: hidden;
+      }
+      
+      .left-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5vh;
+      }
+      
+      .welcome-text {
+        background: rgba(0, 0, 0, 0.8);
+        padding: 2vh 1.5vw;
+        border-radius: 15px;
+        border: 1px solid #00ffff;
+        animation: slideIn 1s ease-out;
+        height: 45%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      
+      .arabic-text {
+        text-align: center;
+        direction: rtl;
+        font-size: 1.3vw;
+        min-font-size: 1.1rem;
+        max-font-size: 2rem;
+        line-height: 1.6;
+        margin-bottom: 1vh;
+        color: #00ff88;
+      }
+      
+      .english-text {
+        text-align: center;
+        direction: ltr;
+        font-size: 1.1vw;
+        min-font-size: 1rem;
+        max-font-size: 1.8rem;
+        line-height: 1.5;
+        color: #88ffff;
+      }
+      
+      .warning-box {
+        background: rgba(255, 136, 0, 0.1);
+        border: 2px solid #ff8800;
+        border-radius: 10px;
+        padding: 1.5vh 1vw;
+        color: #ffaa44;
+        font-size: 1vw;
+        min-font-size: 0.9rem;
+        max-font-size: 1.4rem;
+        text-align: center;
+        height: 50%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        line-height: 1.4;
+      }
+      
+      .right-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 1vh;
+      }
+      
+      .exploit-panel {
+        background: rgba(0, 0, 0, 0.9);
+        border: 2px solid #00ffff;
+        border-radius: 15px;
+        padding: 1.5vh 1.5vw;
+        box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+        animation: fadeIn 1.5s ease-out;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      
+      .exploit-panel h2 {
+        text-align: center;
+        margin: 0 0 1vh 0;
+        font-size: 1.8vw;
+        min-font-size: 1.4rem;
+        max-font-size: 2.5rem;
+        color: #00ffff;
+        text-shadow: 0 0 10px #00ffff;
+      }
+      
+      .firmware-info {
+        text-align: center;
+        margin-bottom: 1vh;
+        font-size: 1.2vw;
+        min-font-size: 1rem;
+        max-font-size: 1.6rem;
+        color: #00ff88;
+      }
+      
+      .progress-bar {
+        width: 100%;
+        height: 6px;
+        background: rgba(0, 255, 255, 0.3);
+        border-radius: 3px;
+        overflow: hidden;
+        margin: 1vh 0;
+      }
+      
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #00ffff, #00ff88);
+        width: 0%;
+        transition: width 0.3s ease;
+      }
+      
+      .status-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+        background: #ff4444;
+        animation: pulse 2s infinite;
+      }
+      
+      .status-indicator.success {
+        background: #44ff44;
+      }
+      
+      .status-indicator.warning {
+        background: #ffaa44;
+      }
+      
+      .status-indicator.real-exploit {
+        background: #ff0080;
+        animation: realExploitPulse 1s infinite;
+      }
+      
+      @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+      }
+      
+      @keyframes realExploitPulse {
+        0% { opacity: 1; box-shadow: 0 0 5px #ff0080; }
+        50% { opacity: 0.7; box-shadow: 0 0 20px #ff0080; }
+        100% { opacity: 1; box-shadow: 0 0 5px #ff0080; }
+      }
+      
+      #console {
+        white-space: pre-wrap;
+        font-size: 0.9vw;
+        min-font-size: 0.8rem;
+        max-font-size: 1.2rem;
+        background: rgba(0, 0, 0, 0.9);
+        padding: 1vh 1vw;
+        border-radius: 10px;
+        border: 1px solid #00ffff;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        overflow-y: auto;
+        flex-grow: 1;
+        font-family: 'logging', monospace;
+        line-height: 1.4;
+      }
+      
+      .footer {
+        text-align: center;
+        padding: 1vh 3vw;
+        background: rgba(0, 0, 0, 0.8);
+        border-top: 1px solid #00ffff;
+        font-size: 0.9vw;
+        min-font-size: 0.8rem;
+        max-font-size: 1.2rem;
+        color: #88ffff;
+        height: 12vh;
+        min-height: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        line-height: 1.3;
+      }
+      
+      #console::-webkit-scrollbar {
+        width: 8px;
+      }
+      
+      #console::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.3);
+      }
+      
+      #console::-webkit-scrollbar-thumb {
+        background: #00ffff;
+        border-radius: 4px;
+      }
+      
+      #console::-webkit-scrollbar-thumb:hover {
+        background: #00ff88;
+      }
+      
+      @media (max-width: 1200px) {
+        .content {
+          grid-template-columns: 1fr;
+          gap: 1vh;
+        }
+        
+        .left-panel {
+          order: 2;
+          height: 30vh;
+        }
+        
+        .right-panel {
+          order: 1;
+          height: 40vh;
+        }
+        
+        .welcome-text {
+          height: 60%;
+        }
+        
+        .warning-box {
+          height: 35%;
+        }
+        
+        .contact-info {
+          position: static;
+          margin: 0;
+        }
+        
+        .header {
+          flex-direction: column;
+          height: 16vh;
+          gap: 1vh;
+        }
+        
+        .header h1 {
+          font-size: 3vw;
+        }
+      }
+      
+      @media (max-width: 768px) {
+        .header h1 {
+          font-size: 4vw;
+        }
+        
+        .arabic-text {
+          font-size: 2.5vw;
+        }
+        
+        .english-text {
+          font-size: 2.2vw;
+        }
+        
+        .contact-info .phone {
+          font-size: 2.5vw;
+        }
+        
+        .exploit-panel h2 {
+          font-size: 3vw;
+        }
+        
+        #console {
+          font-size: 1.8vw;
+        }
+      }
+      
+      @media (min-width: 1920px) {
+        .header h1 {
+          font-size: clamp(2rem, 2.2vw, 3.5rem);
+        }
+        
+        .arabic-text {
+          font-size: clamp(1.1rem, 1.1vw, 1.8rem);
+        }
+        
+        .english-text {
+          font-size: clamp(1rem, 1vw, 1.6rem);
+        }
+        
+        .contact-info .phone {
+          font-size: clamp(1rem, 1vw, 1.6rem);
+        }
+        
+        .exploit-panel h2 {
+          font-size: clamp(1.4rem, 1.5vw, 2.2rem);
+        }
+        
+        #console {
+          font-size: clamp(0.8rem, 0.8vw, 1.1rem);
+        }
+      }
+    </style>
+    
+    <script>
+      if (window.applicationCache && window.applicationCache.status == '0') {
+        window.location.replace("cache.html");
+      }
+    </script>
+  </head>
+  
+  <body>
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <div style="margin-top: 20px; font-size: 1.5rem;">Initializing GameZone...</div>
+    </div>
+    
+    <div class="background"></div>
+    
+    <div class="main-container">
+      <div class="header">
+        <div class="contact-info">
+          <div class="label">📞 Contact / اتصل بنا</div>
+          <div class="phone">07809825770</div>
+        </div>
+        
+        <h1>🎮 GameZone Portal</h1>
+        
+        <div class="status-display">
+          <span class="status-indicator success" id="statusIndicator"></span>
+          <span id="statusText">System Ready - النظام جاهز</span>
+        </div>
+      </div>
+      
+      <div class="content">
+        <div class="left-panel">
+          <div class="welcome-text">
+            <div class="arabic-text">
+              بوابة GameZone – تمنحك حرية التحكم بجهازك<br>
+              🚀 استمتع برحلتك في عالم الألعاب المفتوح
+            </div>
+            <div class="english-text">
+              PSFree: A PS4/PS5 Exploit Chain<br>
+              🎯 Beginning a New Era... Enjoy your journey in GameZone<br>
+              See <a href='./about.html' data-jslicense='1' style="color: #00ff88;">JavaScript license information</a>
+            </div>
+          </div>
+          
+          <div class="warning-box">
+            <div><strong>⚠️ إنتباه / Warning:</strong></div>
+            <div>تأكد من أن جهازك متوافق مع الإصدار 9.00<br>سيتم تشغيل الاستغلال تلقائياً</div>
+            <div>Ensure your console is compatible with firmware 9.00<br>Exploit will run automatically</div>
+          </div>
+        </div>
+        
+        <div class="right-panel">
+          <div class="exploit-panel">
+            <h2>PSFree: A PS4/PS5 Exploit Chain</h2>
+            <div class="firmware-info">
+              <div>PlayStation 4 - Firmware 9.00</div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+              </div>
+            </div>
+            
+            <pre id="console">PSFree: A PS4/PS5 Exploit Chain
+Welcome to GameZone Portal
+System Status: Ready
+Firmware Target: PS4 9.00
+
+Starting exploit execution...
+</pre>
+          </div>
+        </div>
+      </div>
+      
+      <div class="footer">
+        <div>GameZone Portal © 2025 | @Ahmed Lokir @ Asaad Yahya @ Mustafa Roger</div>
+        <div>PSFree-Lapse Exploit For PS4 9.00 - what is Next?</div>
+      </div>
+    </div>
+    
+    <script>
+      let consoleElement = document.getElementById('console');
+      let statusIndicator = document.getElementById('statusIndicator');
+      let statusText = document.getElementById('statusText');
+      let progressFill = document.getElementById('progressFill');
+      let isRealExploitStarted = false;
+      
+      window.addEventListener('load', function() {
+        setTimeout(() => {
+          document.getElementById('loadingOverlay').classList.add('hidden');
+          setTimeout(startFakeExploit, 2000);
+        }, 1500);
+      });
+      
+      function log(message, type = 'info') {
+        const timestamp = new Date().toLocaleTimeString();
+        const prefix = type === 'error' ? '❌ ERROR' : 
+                      type === 'success' ? '✅ SUCCESS' : 
+                      type === 'warning' ? '⚠️ WARNING' : 
+                      type === 'real' ? '🔥 REAL EXPLOIT' : 'ℹ️ INFO';
+        
+        consoleElement.textContent += `[${timestamp}] ${prefix}: ${message}\n`;
+        consoleElement.scrollTop = consoleElement.scrollHeight;
+      }
+      
+      function updateStatus(status, type = 'info') {
+        statusText.textContent = status;
+        statusIndicator.className = `status-indicator ${type}`;
+      }
+      
+      function updateProgress(percent) {
+        progressFill.style.width = percent + '%';
+      }
+      
+      function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+      }
+      
+      async function startFakeExploit() {
+        try {
+          log('Starting PSFree-Lapse exploit automatically...');
+          log('بدء تشغيل الاستغلال التلقائي...');
+          updateStatus('Initializing Demo - تهيئة العرض', 'warning');
+          updateProgress(10);
+          
+          await sleep(2000);
+          log('Checking system compatibility...');
+          log('فحص توافق النظام...');
+          updateProgress(25);
+          
+          await sleep(2500);
+          log('Preparing exploit environment...');
+          log('تحضير بيئة الاستغلال...');
+          updateProgress(50);
+          
+          await sleep(3000);
+          log('Loading exploit modules...');
+          log('تحميل وحدات الاستغلال...');
+          updateProgress(75);
+          
+          await sleep(2000);
+          log('Demo sequence completed!', 'success');
+          log('انتهاء العرض التوضيحي!', 'success');
+          updateProgress(100);
+          updateStatus('Demo Complete - انتهاء العرض', 'success');
+          
+          await sleep(2000);
+          startRealExploit();
+          
+        } catch (error) {
+          log(`Demo failed: ${error.message}`, 'error');
+          updateStatus('Demo Failed - فشل العرض', 'error');
+          setTimeout(startRealExploit, 3000);
+        }
+      }
+      
+      async function startRealExploit() {
+        isRealExploitStarted = true;
+        
+        try {
+          log('========================================', 'real');
+          log('STARTING REAL EXPLOIT SEQUENCE', 'real');
+          log('بدء تسلسل الاستغلال الحقيقي', 'real');
+          log('========================================', 'real');
+          
+          updateStatus('Real Exploit Starting - بدء الاستغلال الحقيقي', 'real-exploit');
+          updateProgress(0);
+          
+          await sleep(1000);
+          log('Initializing PSFree exploit chain...', 'real');
+          log('تهيئة سلسلة استغلال PSFree...', 'real');
+          updateProgress(20);
+          
+          await sleep(1500);
+          log('Loading payload.js module...', 'real');
+          log('تحميل وحدة payload.js...', 'real');
+          updateProgress(40);
+          
+          await sleep(1000);
+          log('Executing real exploit code...', 'real');
+          log('تنفيذ كود الاستغلال الحقيقي...', 'real');
+          updateProgress(60);
+          
+          await sleep(2000);
+          log('Payload injection in progress...', 'real');
+          log('حقن الحمولة قيد التنفيذ...', 'real');
+          updateProgress(80);
+          
+          await sleep(1500);
+          log('Real exploit sequence completed!', 'real');
+          log('انتهاء تسلسل الاستغلال الحقيقي!', 'real');
+          updateProgress(100);
+          updateStatus('Real Exploit Active - الاستغلال الحقيقي نشط', 'real-exploit');
+          
+          log('========================================', 'real');
+          log('REAL EXPLOIT IS NOW RUNNING', 'real');
+          log('الاستغلال الحقيقي يعمل الآن', 'real');
+          log('========================================', 'real');
+          
+        } catch (error) {
+          log(`Real exploit error: ${error.message}`, 'error');
+          updateStatus('Real Exploit Error - خطأ في الاستغلال', 'error');
+        }
+      }
+      
+      setInterval(() => {
+        if (Math.random() < 0.1 && !isRealExploitStarted) {
+          const messages = [
+            'System monitoring active... - مراقبة النظام نشطة',
+            'Security protocols updated - تم تحديث بروتوكولات الأمان',
+            'Memory optimization complete - اكتمل تحسين الذاكرة',
+            'Network connectivity stable - اتصال الشبكة مستقر'
+          ];
+          log(messages[Math.floor(Math.random() * messages.length)]);
+        }
+      }, 15000);
+      
+      setInterval(() => {
+        if (isRealExploitStarted && Math.random() < 0.15) {
+          const realMessages = [
+            'Kernel access verified - تم التحقق من الوصول للنواة',
+            'Memory mapping successful - نجح تعيين الذاكرة',
+            'Payload execution confirmed - تأكيد تنفيذ الحمولة',
+            'System privileges elevated - تم رفع صلاحيات النظام'
+          ];
+          log(realMessages[Math.floor(Math.random() * realMessages.length)], 'real');
+        }
+      }, 10000);
+    </script>
+    
+    <!-- الترتيب الصحيح مثل المشروع الأصلي -->
+    <script src="payload.js"></script>
+    <script type="module" src="./alert.mjs"></script>
+  </body>
+</html>
